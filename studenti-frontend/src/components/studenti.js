@@ -5,6 +5,7 @@ export default function Studenti() {
   const [nome, setNome] = useState("");
   const [cognome, setCognome] = useState("");
   const [anni, setAnni] = useState("");
+  const [email, setEmail] = useState("");
   const [errors, setErrors] = useState({});
   const [students, setStudents] = useState([]);
   const [editingId, setEditingId] = useState(null);
@@ -16,6 +17,7 @@ export default function Studenti() {
     const newErrors = {};
     if (!nome) newErrors.nome = "Il nome è obbligatorio";
     if (!cognome) newErrors.cognome = "Il cognome è obbligatorio";
+    if (!email) newErrors.email = "l'email è obbligatorio";
     if (!anni || isNaN(anni) || anni <= 0) newErrors.anni = "Inserisci un numero valido per l'età";
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -24,7 +26,7 @@ export default function Studenti() {
   const clickMe = (e) => {
     e.preventDefault();
     if (validate()) {
-      const studente = { nome, cognome, anni };
+      const studente = { nome, cognome, anni,email };
       const url = editingId ? `http://localhost:8080/studenti/update/${editingId}` : "http://localhost:8080/studenti/add";
       const method = editingId ? "PUT" : "POST";
 
@@ -39,6 +41,7 @@ export default function Studenti() {
           setNome("");
           setCognome("");
           setAnni("");
+          setEmail("");
           setEditingId(null);
         })
         .catch((error) => console.error("Errore durante l'operazione:", error));
@@ -49,6 +52,7 @@ export default function Studenti() {
     setNome(studente.nome);
     setCognome(studente.cognome);
     setAnni(studente.anni);
+    setEmail(studente.email);
     setEditingId(studente.id);
   };
 
@@ -96,7 +100,7 @@ export default function Studenti() {
     <Container>
       <Grid container spacing={2} alignItems="flex-start">
         <Grid item xs={4}>
-          <Paper elevation={3} style={{ padding: "20px" }}>
+          <Paper elevation={24} style={{ padding: "20px" }}>
             <Box component="form" sx={{ "& > :not(style)": { m: 1, width: "100%" } }} noValidate autoComplete="off">
               <h2>{editingId ? "Modifica Studente" : "Nuovo Studente"}</h2>
               <TextField
@@ -126,6 +130,15 @@ export default function Studenti() {
                 error={!!errors.anni}
                 helperText={errors.anni}
               /><br />
+                 <TextField
+                id="email"
+                label="Email"
+                variant="outlined"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                error={!!errors.email}
+                helperText={errors.email}
+              /><br />
               <Button variant="contained" color="secondary" onClick={clickMe} fullWidth>
                 {editingId ? "Modifica" : "Aggiungi"}
               </Button>
@@ -134,7 +147,7 @@ export default function Studenti() {
         </Grid>
 
         <Grid item xs={8}>
-          <Paper elevation={5} style={{ padding: "20px" }}>
+          <Paper elevation={24} style={{ padding: "20px" }}>
             <h2>Lista Studenti ({studentCount})</h2>
             <FormControl style={{ marginBottom: "2px", minWidth: 140 }}>
               <InputLabel>Record per pagina</InputLabel>
@@ -153,6 +166,7 @@ export default function Studenti() {
                     <TableCell>Nome</TableCell>
                     <TableCell>Cognome</TableCell>
                     <TableCell>Anni</TableCell>
+                    <TableCell>Email</TableCell>
                     <TableCell>Azione</TableCell>
                   </TableRow>
                 </TableHead>
@@ -163,6 +177,7 @@ export default function Studenti() {
                       <TableCell>{studente.nome}</TableCell>
                       <TableCell>{studente.cognome}</TableCell>
                       <TableCell>{studente.anni}</TableCell>
+                      <TableCell>{studente.email}</TableCell>
                       <TableCell>
                         <Button variant="contained" color="primary" onClick={() => handleEdit(studente)}>
                           Modifica
