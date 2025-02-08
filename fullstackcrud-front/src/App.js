@@ -6,6 +6,7 @@ import Home from './pages/Home';
 import { BrowserRouter as Router,Routes,Route } from 'react-router-dom';
 import AddUser from './users/AddUser';
 import UpdateUser from './users/UpdateUser';
+import ViewUser from './users/ViewUser';
 
 function App() {
   return (
@@ -16,6 +17,7 @@ function App() {
       <Routes>
       <Route exact  path="/" element={<Home/>}></Route>
       <Route exact  path="/adduser" element={<AddUser/>}></Route>
+      <Route exact  path="/userdetail/:id" element={<ViewUser/>}></Route>
       <Route exact  path="/edituser/:id" element={<UpdateUser/>}></Route>
      
       </Routes>

@@ -113,9 +113,9 @@ export default function Home() {
                 <td>{user.cognome}</td>
                 <td>{user.email}</td>
                 <td>
-                  <button type="button" className="btn btn-primary mx-2">
+                  <Link type="button" className="btn btn-primary mx-2" to={`/userdetail/${user.id}`}>
                     View
-                  </button>
+                  </Link>
                   <Link
                     type="button"
                     className="btn btn-secondary mx-2"
