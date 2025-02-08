@@ -6,6 +6,8 @@ export default function Studenti() {
   const [cognome, setCognome] = useState("");
   const [anni, setAnni] = useState("");
   const [email, setEmail] = useState("");
+  const [cittadinanza, setCittadinanza] = useState(""); // Stato per la cittadinanza
+  const [cittadinanze, setCittadinanze] = useState([]); // Stato per la lista delle cittadinanze
   const [errors, setErrors] = useState({});
   const [students, setStudents] = useState([]);
   const [editingId, setEditingId] = useState(null);
@@ -17,44 +19,48 @@ export default function Studenti() {
     const newErrors = {};
     if (!nome) newErrors.nome = "Il nome è obbligatorio";
     if (!cognome) newErrors.cognome = "Il cognome è obbligatorio";
-    if (!email) newErrors.email = "l'email è obbligatorio";
+    if (!email) newErrors.email = "L'email è obbligatoria";
     if (!anni || isNaN(anni) || anni <= 0) newErrors.anni = "Inserisci un numero valido per l'età";
+    if (!cittadinanza) newErrors.cittadinanza = "La cittadinanza è obbligatoria";
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
-  };
+};
 
-  const clickMe = (e) => {
+const clickMe = (e) => {
     e.preventDefault();
     if (validate()) {
-      const studente = { nome, cognome, anni,email };
-      const url = editingId ? `http://localhost:8080/studenti/update/${editingId}` : "http://localhost:8080/studenti/add";
-      const method = editingId ? "PUT" : "POST";
+        const studente = { nome, cognome, anni: Number(anni), email, cittadinanza }; // Converti 'anni' in numero
+        const url = editingId ? `http://localhost:8080/studenti/update/${editingId}` : "http://localhost:8080/studenti/add";
+        const method = editingId ? "PUT" : "POST";
 
-      fetch(url, {
-        method: method,
-        headers: { "Content-Type": "Application/json" },
-        body: JSON.stringify(studente),
-      })
+        fetch(url, {
+            method: method,
+            headers: { "Content-Type": "Application/json" },
+            body: JSON.stringify(studente),
+        })
         .then((response) => response.json())
         .then(() => {
-          fetchStudents();
-          setNome("");
-          setCognome("");
-          setAnni("");
-          setEmail("");
-          setEditingId(null);
+            fetchStudents();
+            setNome("");
+            setCognome("");
+            setAnni("");
+            setEmail("");
+            setCittadinanza(""); 
+            setEditingId(null);
         })
         .catch((error) => console.error("Errore durante l'operazione:", error));
     }
-  };
+};
 
-  const handleEdit = (studente) => {
-    setNome(studente.nome);
-    setCognome(studente.cognome);
-    setAnni(studente.anni);
-    setEmail(studente.email);
-    setEditingId(studente.id);
-  };
+
+const handleEdit = (studente) => {
+  setNome(studente.nome);
+  setCognome(studente.cognome);
+  setAnni(studente.anni);
+  setEmail(studente.email);
+  setCittadinanza(studente.cittadinanza ? studente.cittadinanza.id : ""); // Impostiamo l'ID della cittadinanza
+  setEditingId(studente.id);
+};
 
   const handleDelete = (id, nome, cognome) => {
     if (window.confirm(`Sei sicuro di voler cancellare lo studente ${nome} ${cognome}?`)) {
@@ -67,14 +73,26 @@ export default function Studenti() {
   };
 
   const fetchStudents = () => {
+    // Fetch degli studenti
     fetch("http://localhost:8080/studenti/lista")
       .then((res) => res.json())
       .then((result) => setStudents(result));
-
+  
+    // Fetch del conteggio degli studenti
     fetch("http://localhost:8080/studenti/count")
       .then((res) => res.json())
       .then((count) => setStudentCount(count));
+  
+    // Fetch per ottenere le cittadinanze
+    fetch("http://localhost:8080/cittadinanza")
+      .then((res) => res.json())
+      .then((result) => {
+        //console.log("Cittadinanze ricevute:", result);  // Log per verificare i dati
+        setCittadinanze(result);
+      })
+      .catch((error) => console.error("Errore durante il fetch delle cittadinanze:", error));
   };
+  
 
   useEffect(() => {
     fetchStudents();
@@ -130,7 +148,7 @@ export default function Studenti() {
                 error={!!errors.anni}
                 helperText={errors.anni}
               /><br />
-                 <TextField
+              <TextField
                 id="email"
                 label="Email"
                 variant="outlined"
@@ -139,6 +157,29 @@ export default function Studenti() {
                 error={!!errors.email}
                 helperText={errors.email}
               /><br />
+
+              {/* Combobox per la cittadinanza */}
+              <FormControl fullWidth error={!!errors.cittadinanza}>
+  <InputLabel>Cittadinanza</InputLabel>
+  <Select
+    value={cittadinanza}
+    onChange={(e) => setCittadinanza(e.target.value)}
+    label="Cittadinanza"
+  >
+    <MenuItem value="">Seleziona cittadinanza</MenuItem>
+    {cittadinanze.map((cittadino) => (
+      <MenuItem key={cittadino.id} value={cittadino.id}>
+        {cittadino.cittadinanza} {/* Modifica qui per visualizzare il nome corretto */}
+      </MenuItem>
+    ))}
+  </Select>
+  {errors.cittadinanza && <p style={{ color: 'red' }}>{errors.cittadinanza}</p>}
+</FormControl>
+
+
+
+              <br />
+              
               <Button variant="contained" color="secondary" onClick={clickMe} fullWidth>
                 {editingId ? "Modifica" : "Aggiungi"}
               </Button>
@@ -149,7 +190,7 @@ export default function Studenti() {
         <Grid item xs={8}>
           <Paper elevation={24} style={{ padding: "20px" }}>
             <h2>Lista Studenti ({studentCount})</h2>
-            <FormControl style={{ marginBottom: "2px", minWidth: 140 }}>
+            <FormControl style={{ marginBottom: "20px", minWidth: 140 }}>
               <InputLabel>Record per pagina</InputLabel>
               <Select value={rowsPerPage} onChange={(e) => setRowsPerPage(e.target.value)}>
                 <MenuItem value={5}>5</MenuItem>
@@ -167,6 +208,7 @@ export default function Studenti() {
                     <TableCell>Cognome</TableCell>
                     <TableCell>Anni</TableCell>
                     <TableCell>Email</TableCell>
+                    <TableCell>Cittadinanza</TableCell>
                     <TableCell>Azione</TableCell>
                   </TableRow>
                 </TableHead>
@@ -178,6 +220,7 @@ export default function Studenti() {
                       <TableCell>{studente.cognome}</TableCell>
                       <TableCell>{studente.anni}</TableCell>
                       <TableCell>{studente.email}</TableCell>
+                      <TableCell>{studente.cittadinanza ? studente.cittadinanza.cittadinanza : 'N/A'}</TableCell>
                       <TableCell>
                         <Button variant="contained" color="primary" onClick={() => handleEdit(studente)}>
                           Modifica
